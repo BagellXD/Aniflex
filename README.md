@@ -91,4 +91,4 @@ Poster and video paths refer to local media. Downloaded video files and generate
 
 ## AI Assistance
 
-AI tools helped with parts of this project, including Rust code. I am still learning Rust, so I used AI to help me understand and write some of it. I review and test changes while continuing to learn.
+I built this project myself and used AI as a supporting tool for selected parts of the work. Since I am still learning Rust, I especially used it to help explain Rust concepts, explore approaches, and work through some code. The project and its direction are mine, and I continue to review, test, and learn from the code.
