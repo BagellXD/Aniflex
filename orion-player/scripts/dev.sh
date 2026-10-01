@@ -32,6 +32,7 @@ echo "Starting Rust media server..."
 
 cargo run \
     --manifest-path "$PROJECT_ROOT/src-tauri/Cargo.toml" \
+    --bin media_server \
     &
 
 RUST_PID=$!

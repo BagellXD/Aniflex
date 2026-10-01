@@ -1,17 +1,50 @@
 # Orion Player
 
-An offline-first desktop library prototype built with Tauri, React, and TypeScript.
+Orion Player is a locally hosted anime library website. The interface is built with React, TypeScript, and Vite; a Rust HTTP server provides the local catalog, playback, and API routes.
 
-## Run
+## Requirements
 
-From this directory:
+- CachyOS, Arch Linux, or another Linux distribution with Bash and `curl`
+- Node.js 20 or newer and npm
+- Rust stable (install with rustup)
+- FFmpeg, including `ffprobe`, for video inspection and conversion features
+- `ani-cli` for anime search/download features
+
+On CachyOS or Arch Linux, install the development packages with:
+
+```sh
+sudo pacman -S --needed base-devel curl wget file openssl libxdo libayatana-appindicator librsvg webkit2gtk-4.1 nodejs npm rustup ffmpeg
+rustup default stable
+```
+
+The Rust package still includes Tauri build dependencies, so Linux system libraries used by Tauri may be needed when Cargo compiles the backend. The website itself runs in a regular browser and does not need the Tauri desktop shell.
+
+## Run Locally
+
+From the `orion-player` directory:
 
 ```sh
 npm install
-npm run tauri dev
+npm run dev
 ```
 
-Linux builds of Tauri require the platform's WebKitGTK development packages. The frontend can also be previewed in a browser with `npm run dev` after installing dependencies.
+The dev command starts the Rust HTTP server and Vite. Open the local URL printed by Vite (usually `http://localhost:1420`). The first run downloads and compiles the Rust and npm dependencies. Keep the terminal open while using the site; press `Ctrl+C` to stop both services.
+
+To create a production frontend build:
+
+```sh
+npm run build
+```
+
+The build output is written to `dist/`. API and media routes still need the Rust server when running the full site; a static frontend host alone will not provide those routes.
+
+## Operating Systems
+
+The built frontend can be opened in a modern browser on Linux, macOS, or Windows. The included one-command development launcher currently targets Linux/macOS-style Bash environments; Windows users can use WSL. CachyOS/Arch Linux is the documented development environment. Other Linux distributions need their equivalent Tauri/WebKitGTK system packages.
+
+## Optional Media Tools
+
+FFmpeg/`ffprobe` and `ani-cli` are external programs, not npm or Cargo packages. Install them separately and make them available on `PATH` to use the related search, download, and conversion features. Basic frontend development does not require anime downloads, but the Rust API server is needed for catalog, playback, and API functionality.
 
 ## Catalog
 
@@ -32,4 +65,8 @@ Edit `data/catalog.json` as an array of local entries. Example:
 ]
 ```
 
-Poster and video paths are local app paths; media files are ignored by Git. Playback and prediction integration are not wired yet.
+Poster and video paths refer to local media. Downloaded video files and generated local state are ignored by Git; add your own media locally under `src-tauri/media/` and do not commit copyrighted downloads.
+
+## AI Assistance
+
+AI tools helped with parts of this project, including Rust code. I am still learning Rust, so I used AI to help me understand and write some of it. I review and test changes while continuing to learn.
