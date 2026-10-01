@@ -1,0 +1,13 @@
+.git
+.env
+node_modules
+dist
+target
+src-tauri/target
+src-tauri/gen
+src-tauri/state
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm

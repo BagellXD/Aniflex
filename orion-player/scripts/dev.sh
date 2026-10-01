@@ -40,8 +40,8 @@ RUST_PID=$!
 echo "Rust media server PID: $RUST_PID"
 echo "Waiting for media server on 127.0.0.1:8787..."
 
-# Give Cargo/Rust plenty of time to compile on the first run.
-for i in {1..300}; do
+# A cold Rust build can take several minutes, especially in a container.
+for i in {1..1800}; do
 
     # The server is ready when its HTTP endpoint responds.
     if curl -s \
@@ -62,9 +62,13 @@ for i in {1..300}; do
         exit 1
     fi
 
-    sleep 0.1
+    if (( i % 30 == 0 )); then
+        echo "Still waiting for Rust to finish compiling (${i}s)..."
+    fi
 
-    if [[ "$i" -eq 300 ]]; then
+    sleep 0.5
+
+    if [[ "$i" -eq 1800 ]]; then
         echo
         echo "ERROR: Media server did not start on port 8787."
         echo "Rust is still running, but the HTTP server never became reachable."

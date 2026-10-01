@@ -7,6 +7,7 @@
 /orion-player/src-tauri/target/
 /orion-player/src-tauri/gen/
 /orion-player/src-tauri/state/
+/orion-player/src-tauri/media/
 /orion-player/data/*.bak
 /test_data/env/
 

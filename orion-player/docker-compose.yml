@@ -1,0 +1,17 @@
+services:
+  orion:
+    build:
+      context: .
+    ports:
+      - "${ORION_BIND_ADDRESS:-127.0.0.1}:1420:1420"
+    environment:
+      ANI_CLI_PLAYER: ffmpeg
+    volumes:
+      - .:/app
+      - orion_node_modules:/app/node_modules
+      - orion_cargo_target:/app/src-tauri/target
+    init: true
+
+volumes:
+  orion_node_modules:
+  orion_cargo_target:
