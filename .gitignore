@@ -1,0 +1,23 @@
+/target
+/src/main
+/src/test
+/src/tempCodeRunnerFile.rs
+/orion-player/node_modules/
+/orion-player/dist/
+/orion-player/src-tauri/target/
+/orion-player/src-tauri/gen/
+/orion-player/src-tauri/state/
+/orion-player/data/*.bak
+/test_data/env/
+
+# Local media libraries can contain large or copyrighted downloads.
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+
+# Local environment files
+.env
+.env.*
+!.env.example

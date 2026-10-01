@@ -1,0 +1,42 @@
+{
+    "battery": {
+        "soc": 0,
+        "voltage": 0.0,
+        "current": 0.0,
+        "charge_current": 0.0,
+        "discharge_current": 0.0,
+        "power": 0.0,
+        "temperature": 0.0
+    },
+    "inverter": {
+        "mode": "",
+        "temperature": 0.0,
+        "bus_voltage": 0.0
+    },
+    "output": {
+        "voltage": 0.0,
+        "frequency": 0.0,
+        "load_percentage": 0,
+        "power": 0,
+        "apparent_power": 0
+    },
+    "grid": {
+        "voltage": 0.0,
+        "frequency": 0.0
+    },
+    "solar": {
+        "voltage": 0.0,
+        "current": 0.0,
+        "power": 0
+    },
+    "status": {
+        "connected": false,
+        "warnings": [],
+        "faults": []
+    },
+    "Updates": {
+        "Date": "",
+        "version": "",
+        "update_description": ""
+    }
+}

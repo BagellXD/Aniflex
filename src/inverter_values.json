@@ -1,0 +1,43 @@
+{
+  "Updates": {
+    "Date": "",
+    "update_description": "",
+    "version": ""
+  },
+  "battery": {
+    "charge_current": 0.0,
+    "current": 0.0,
+    "discharge_current": 8.0,
+    "power": 408.0,
+    "soc": 8,
+    "temperature": 0.0,
+    "voltage": 51.0
+  },
+  "grid": {
+    "frequency": 0.0,
+    "voltage": 0.0
+  },
+  "inverter": {
+    "bus_voltage": 0.0,
+    "mode": "",
+    "temperature": 0.0
+  },
+  "output": {
+    "apparent_power": 437,
+    "frequency": 49.9,
+    "load_percentage": 8,
+    "power": 393,
+    "voltage": 230.0
+  },
+  "solar": {
+    "current": 0.0,
+    "power": 0,
+    "voltage": 0.0
+  },
+  "status": {
+    "connected": true,
+    "faults": [],
+    "warnings": []
+  }
+
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Orion Player",
+  "version": "0.1.0",
+  "identifier": "dev.orion.player",
+
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+
+  "app": {
+    "windows": [
+      {
+        "title": "Orion Player",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 620
+      }
+    ],
+
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$HOME/Documents/Programming/Rust/Rust/orion-player/src-tauri/media/**/*"
+        ]
+      },
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost; media-src 'self' asset: http://asset.localhost http://127.0.0.1:8787"
+    }
+  },
+
+  "bundle": {
+    "active": false,
+    "icon": ["icons/icon.png"]
+  }
+}
