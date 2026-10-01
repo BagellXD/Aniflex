@@ -129,6 +129,18 @@ This is why `.dockerignore` and `.gitignore` have different jobs: `.dockerignore
 - Want to stop the app but keep files and compile caches? Use `docker compose down`.
 - Want to delete dependency/build caches too? `docker compose down --volumes` removes the named cache volumes, so future runs have to download and compile dependencies again. It does not remove files in the host's `orion-player` folder.
 
+## How to Use the Website
+
+When you first open the site, it may appear empty. To begin, go to **Add Anime**, search for anime you want to use, and download them.
+
+This download step is important because it gives the prediction model something to learn from. It is best to download up to 5 anime at a time, and ideally use 5 different titles. You can download the first episode of each anime, or choose a specific episode you want, but downloading 5 different anime is recommended.
+
+After each download, wait for the page to reload on its own. This indicates the anime has finished downloading and the library is ready for the next one. The speed of downloads depends on your network connection.
+
+Once all 5 anime have been downloaded, click **Generate Now** on the Home page. This runs the prediction model and recommends anime it thinks you are likely to enjoy based on the anime you added.
+
+This is the main flow for training and using the recommendation system: add anime, download a small set, wait for the reload, and then generate recommendations.
+
 ## Phone Access
 
 The address `172.18.0.2` printed as Vite's container network address is internal to Docker. Do **not** use it on the phone. The phone needs the laptop's address on the phone-hotspot network and port `1420`.
