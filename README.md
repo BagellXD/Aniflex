@@ -373,7 +373,7 @@ Both run Linux containers through a virtualized Linux environment.
 Clone the repository:
 
 ```bash
-git clone https://github.com/BagellXD/Aniflex.git
+git clone --branch master https://github.com/BagellXD/Aniflex.git
 ```
 
 Enter the application directory:
@@ -505,6 +505,57 @@ For Docker:
 docker compose ps
 docker compose logs -f
 ```
+
+---
+
+# 🔄 Updating ANIFLEX
+
+When a new ANIFLEX update is published, update the source first, then recreate the container from the `orion-player` directory.
+
+## Update the project source
+
+From the repository root (the directory containing `orion-player`), check for local changes and pull the latest `master` branch:
+
+```bash
+git status --short
+git pull --ff-only origin master
+```
+
+If Git refuses because you have local edits, keep those edits and resolve or commit them before updating. Do not discard local catalog, playback, or media data to force an update.
+
+## Update a Podman container
+
+```bash
+cd orion-player
+podman-compose up -d --build --force-recreate
+podman-compose logs -f orion
+```
+
+Check service status with `podman-compose ps`. Press `Ctrl+C` to stop following logs; this does not stop the container.
+
+## Update a Docker container
+
+```bash
+cd orion-player
+docker compose up -d --build --force-recreate
+docker compose logs -f orion
+```
+
+Check service status with `docker compose ps`.
+
+## Source-only changes
+
+The project directory is bind-mounted into the container. Frontend edits normally hot-reload, and Rust edits are rebuilt by the development launcher. If the running app does not pick up a source/configuration change, recreate it without rebuilding the image:
+
+```bash
+# Podman
+podman-compose up -d --force-recreate
+
+# Docker
+docker compose up -d --force-recreate
+```
+
+Use `--build` when the `Dockerfile`, installed tools, or image dependencies changed, or when you want to ensure the image is rebuilt from the updated source. Routine updates do not require removing the cache volumes. Avoid `down --volumes` unless you intentionally want to delete the npm/Cargo caches; local media and project files are separate, but should always be backed up.
 
 ---
 
@@ -1223,7 +1274,7 @@ The shortest path for a new user is:
 ### 1. Clone
 
 ```bash
-git clone https://github.com/BagellXD/Aniflex.git
+git clone --branch master https://github.com/BagellXD/Aniflex.git
 ```
 
 ### 2. Enter the application
