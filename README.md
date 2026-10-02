@@ -1,6 +1,6 @@
 # Orion Player
 
-**Version 1.1.0 - Forced Patch**
+**Version 1.1.1 - low end aid forced patch **
 
 Orion Player is a locally hosted anime library website. The browser UI uses React, TypeScript, and Vite. A Rust HTTP server handles the local catalog, playback, progress, and API requests. The container workflow runs both processes together in a Linux container.
 
