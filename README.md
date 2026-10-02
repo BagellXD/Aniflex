@@ -1,220 +1,786 @@
-# Orion Player
+# 🎬 ANIFLEX
 
-**Version 1.1.1 - low end aid forced patch **
+### Your anime library. Your machine. Your rules.
 
-Orion Player is a locally hosted anime library website. The browser UI uses React, TypeScript, and Vite. A Rust HTTP server handles the local catalog, playback, progress, and API requests. The container workflow runs both processes together in a Linux container.
+**ANIFLEX** is a locally hosted anime library built to feel like a personal Netflix , except the library lives on your own computer.
 
-This is a personal project and a development setup, not a public production service. Streaming/download availability depends on external sites and tools and can change at any time.
+It combines a modern **React + TypeScript** interface with a **Rust** backend responsible for local media, playback, catalog management, progress tracking, and downloads.
 
-## What Changed in 1.1
+ANIFLEX is designed around one main idea:
 
-- Added a container-based Linux development environment, runnable with Podman or Docker.
-- Added `ani-cli`, `yt-dlp`, FFmpeg, and `fzf` to the container for the app's download flow.
-- Limited concurrent Rust compilation to two jobs by default to reduce peak build memory.
-- Kept the Rust API on container loopback; only the Vite website port is published.
-- Added a longer startup wait for the first Rust compile.
-- Added phone-over-hotspot instructions. Phone access through rootless Podman and Docker Desktop for Linux is **not yet verified**; see the phone section below.
+> **Build your own anime library instead of depending on a permanent online streaming service.**
 
-## Run with a Container
+The project can run directly on Linux or inside a container using **Podman or Docker**, making it possible to run the same development environment across different operating systems.
 
-You can run Orion with either Docker Compose or Podman Compose. They use the same `Dockerfile` and `docker-compose.yml`; switching runtimes does not require changing Orion's code. Install one runtime, clone the repo, open a terminal in `orion-player`, and run the matching Compose command below.
+---
 
-**Recommended for lower-end Linux computers: Podman.** Native rootless Podman runs directly on Linux and avoids the always-on Linux virtual machine used by Docker Desktop. Docker is also supported and may be the easier choice if you already have it installed. On Windows and macOS, both Docker Desktop and Podman Desktop run Linux containers inside a virtual machine, so Podman is not automatically lighter there. OrbStack is another macOS-only runtime, but it is not required for Orion.
+## ✨ What is ANIFLEX?
 
-The container provides Node.js, Rust, Linux build libraries, `ani-cli`, `yt-dlp`, FFmpeg, and other required tools. You do **not** need to install those project dependencies on your computer. The first build downloads the base image and dependencies and compiles the Rust backend; expect it to take several minutes (sometimes longer on a low-end machine). Later starts reuse cached dependencies and are much quicker. Container setup is straightforward, but the first build is not instant.
+ANIFLEX is a personal, offline-first anime library application.
 
-### 1. Install a container runtime
+Instead of relying on a remote database and streaming server for every viewing session, ANIFLEX works with media stored locally on your machine.
 
-Choose one option:
+The application consists of:
 
-- **Linux, lower memory use:** Install Podman and the Compose provider. On CachyOS/Arch, run `sudo pacman -S podman podman-compose`. On Fedora, use `sudo dnf install podman podman-compose`. On Debian/Ubuntu, install `podman` and `podman-compose` from the distribution's package manager; package availability can depend on the release. You do not need to start a Podman daemon or initialize a Podman machine on Linux. Podman Desktop is optional; the engine and Compose provider are what run the app.
-- **Windows or macOS:** Install Docker Desktop, start it, and wait for its engine to be ready. Podman Desktop is also an option, but on these operating systems it needs a Podman machine (a Linux VM) to run Linux containers.
-- **Linux with Docker:** Docker Engine and the Docker Compose plugin work too. Docker Desktop also works, but includes a Linux VM and can use more baseline memory than native Podman.
+* 🎨 A React/TypeScript frontend
+* ⚡ Vite development tooling
+* 🦀 A Rust backend and local HTTP media server
+* 🎞️ Local video playback
+* 📝 Subtitle support
+* 💾 Local watch progress
+* ❤️ Anime ratings and preferences
+* 🧠 A recommendation/prediction system
+* 📥 Automated anime downloading
+* 🔎 Anime discovery and metadata
+* 🐳 Docker/Podman container support
+* 📱 Experimental local-network/phone access
 
-Use the official installation guides for the runtime you choose: [Podman installation](https://podman.io/docs/installation), [Podman Desktop](https://podman-desktop.io/docs/installation), or [Docker Desktop](https://docs.docker.com/get-started/get-docker/). On Linux, prefer your distribution's packages for Podman.
+The result is a self-hosted anime experience that can continue working even when you are no longer connected to the internet, provided the anime has already been downloaded.
 
-Check the commands for your selected runtime:
+---
 
-```sh
-# Podman
-podman --version
-podman-compose --version
+# 🖼️ Project Overview
 
-# Or Docker
+```text
+                    ANIFLEX
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+   React Frontend                 Rust Backend
+   TypeScript                     Local HTTP API
+   Vite                           Media Server
+        │                             │
+        └──────────────┬──────────────┘
+                       │
+                 Local Library
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+        Videos      Subtitles    Metadata
+          │            │            │
+          └────────────┴────────────┘
+                       │
+                Recommendation
+                     Model
+```
+
+The browser communicates with the Rust server locally.
+
+The Rust server handles the parts of the application that should not be handled purely by the frontend, including local media access and API requests.
+
+---
+
+# 🚀 Features
+
+## 🎞️ Local Anime Library
+
+ANIFLEX stores your downloaded anime locally.
+
+Your library isn't dependent on an ANIFLEX cloud account or a remote database.
+
+Your local files remain on your machine.
+
+---
+
+## ▶️ Local Video Playback
+
+Watch downloaded episodes directly through the ANIFLEX interface.
+
+The local Rust media server handles video requests and provides them to the frontend.
+
+The player supports functionality such as:
+
+* Episode playback
+* Episode navigation
+* Resume/continue watching
+* Playback progress
+* Subtitles/captions
+* Playback controls
+* Fullscreen playback
+
+---
+
+## 📚 Anime Metadata
+
+ANIFLEX can associate downloaded anime with metadata such as:
+
+* Title
+* English title
+* Romaji title
+* Genres
+* Format
+* Episode count
+* Rating
+* Poster artwork
+* Synopsis/information
+
+This allows the local library to feel more like a proper streaming-service interface rather than a folder full of video files.
+
+---
+
+## ❤️ Personal Ratings
+
+ANIFLEX allows you to express your preferences through:
+
+* ❤️ Like
+* 👎 Dislike
+* Unrated
+
+These preferences are used as part of the recommendation system.
+
+Your library therefore isn't just a collection of downloaded files , it can become training data for your personal anime recommendations.
+
+---
+
+# 🧠 Recommendation System
+
+One of the more experimental parts of ANIFLEX is its recommendation/prediction system.
+
+The goal is to make the library increasingly personalized based on what you actually watch and like.
+
+The general workflow is:
+
+```text
+                Your Anime History
+                        │
+                        ▼
+                Preference Data
+                        │
+                 ┌──────┴──────┐
+                 │             │
+               Liked        Disliked
+                 │             │
+                 └──────┬──────┘
+                        ▼
+                 Prediction Model
+                        │
+                        ▼
+              New Anime Suggestions
+                        │
+                        ▼
+                  Local Library
+```
+
+### How to start training it
+
+A new installation may initially have an empty library.
+
+Start by opening **Add Anime** and downloading a small number of anime.
+
+A varied collection is preferable when beginning the recommendation process.
+
+For example:
+
+```text
+Anime A
+Anime B
+Anime C
+Anime D
+Anime E
+```
+
+Then rate the anime you actually like.
+
+The model can use those preferences as part of its history when deciding what should be downloaded or recommended next.
+
+---
+
+## 📥 Automated Downloads
+
+ANIFLEX uses external command-line tools for its download workflow.
+
+The container environment includes:
+
+* `ani-cli`
+* `yt-dlp`
+* `ffmpeg`
+* `fzf`
+
+These tools are installed **inside the container** when using the container workflow.
+
+That means you do not need to separately install every media tool on your computer.
+
+> Download availability depends on external providers and tools. Providers can change, block requests, rate-limit users, or stop working entirely. ANIFLEX cannot guarantee that an external source will always remain available.
+
+---
+
+# 🧩 Technology Stack
+
+| Component          | Technology       |
+| ------------------ | ---------------- |
+| Frontend           | React            |
+| Language           | TypeScript       |
+| Frontend tooling   | Vite             |
+| Backend            | Rust             |
+| Local API          | Rust HTTP server |
+| Media              | FFmpeg           |
+| Downloading        | ani-cli / yt-dlp |
+| Containerization   | Docker / Podman  |
+| Metadata           | AniList          |
+| Package management | npm / Cargo      |
+
+---
+
+# 📁 Project Structure
+
+The repository contains the main ANIFLEX application inside `orion-player`.
+
+A simplified view:
+
+```text
+Aniflex/
+│
+├── orion-player/
+│   │
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── style.css
+│   │
+│   ├── src-tauri/
+│   │   ├── src/
+│   │   │   ├── main.rs
+│   │   │   ├── ani_cli.rs
+│   │   │   ├── prediction.rs
+│   │   │   └── video_server.rs
+│   │   │
+│   │   └── media/
+│   │
+│   ├── public/
+│   ├── data/
+│   │   └── catalog.json
+│   │
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── test_data/
+│
+└── README.md
+```
+
+The exact structure can change as ANIFLEX develops.
+
+---
+
+# 🐳 Running ANIFLEX with a Container
+
+The easiest way to avoid installing the entire development stack manually is to use the included container environment.
+
+ANIFLEX supports:
+
+* **Podman**
+* **Docker**
+
+The same `Dockerfile` and Compose configuration are used for both.
+
+The container provides the project's Linux environment, including Rust, Node.js, FFmpeg, ani-cli, yt-dlp, and other required dependencies.
+
+---
+
+# 🪟 Windows Users
+
+Windows users **do not need to install Rust, Node.js, FFmpeg, ani-cli, or the other ANIFLEX development dependencies directly** when using the container workflow.
+
+Instead, use either:
+
+### Recommended
+
+**Docker Desktop**
+
+or:
+
+**Podman Desktop**
+
+Podman on Windows requires a Linux environment through a Podman machine/WSL2 because ANIFLEX's container is a Linux environment.
+
+### Docker Desktop
+
+Install Docker Desktop and make sure its engine is running.
+
+Then verify:
+
+```powershell
 docker --version
 docker compose version
 ```
 
-For Podman, use the `podman-compose` command shown below. `podman compose` is a wrapper that selects an installed provider; on some computers it may accidentally select a Docker Compose plugin instead. Using `podman-compose` directly avoids that ambiguity.
+### Podman Desktop
 
-### 2. Download the project
+Install Podman Desktop and configure its Podman machine.
 
-If you do not already have the repository, clone it and enter the app directory:
+Then verify:
 
-```sh
+```powershell
+podman --version
+podman-compose --version
+```
+
+If using Podman, the Podman machine must be running before starting ANIFLEX.
+
+For example:
+
+```powershell
+podman machine start
+```
+
+---
+
+# 🐧 Linux Users
+
+Linux users can run Podman natively without a virtual machine.
+
+### CachyOS / Arch Linux
+
+```bash
+sudo pacman -S podman podman-compose
+```
+
+Verify:
+
+```bash
+podman --version
+podman-compose --version
+```
+
+### Fedora
+
+```bash
+sudo dnf install podman podman-compose
+```
+
+### Docker
+
+Docker Engine and Docker Compose can also be used on Linux.
+
+---
+
+# 🍎 macOS
+
+macOS users can use:
+
+* Docker Desktop
+* Podman Desktop
+
+Both run Linux containers through a virtualized Linux environment.
+
+---
+
+# 📥 Getting ANIFLEX
+
+Clone the repository:
+
+```bash
 git clone https://github.com/BagellXD/Aniflex.git
+```
+
+Enter the application directory:
+
+```bash
 cd Aniflex/orion-player
 ```
 
-If you already have the project, open a terminal in its `orion-player` directory. This matters: running Compose from the repository's parent folder produces `no configuration file provided` because `docker-compose.yml` is inside `orion-player`.
+**Important:** Compose files are located inside `orion-player`.
 
-### 3. (Optional) Set local options
+Running the Compose command from the repository's parent directory will not work correctly.
 
-No `.env` file is required for a local run. The defaults bind the website to `127.0.0.1` (your own computer) and limit Rust compilation to two jobs. To create a local settings file, copy the example:
+---
 
-```sh
-# Linux, macOS, or Git Bash
+# ⚙️ Optional Configuration
+
+ANIFLEX does not require an `.env` file for a normal local installation.
+
+If you want to customize the local environment, copy the example file.
+
+### Linux / macOS / Git Bash
+
+```bash
 cp .env.example .env
 ```
 
+### Windows PowerShell
+
 ```powershell
-# Windows PowerShell
 Copy-Item .env.example .env
 ```
 
-On a low-memory computer, put `ORION_CARGO_BUILD_JOBS=1` in `.env` before the first build. This lowers peak compile memory at the cost of a longer build. Keep the default `ORION_BIND_ADDRESS=127.0.0.1` unless you specifically need access from another device; see [Phone Access](#phone-access).
+For a low-memory computer, you can reduce Rust's compilation concurrency:
 
-### 4. Build and start Orion
+```env
+ORION_CARGO_BUILD_JOBS=1
+```
 
-Make sure the terminal's current directory is `orion-player`, then run exactly one command for your runtime:
+The default configuration uses two Rust compilation jobs to reduce peak memory usage.
 
-```sh
-# Podman on Linux
+---
+
+# ▶️ Starting ANIFLEX
+
+## Podman
+
+From inside `orion-player`:
+
+```bash
 podman-compose up --build
 ```
 
-```sh
-# Docker
+## Docker
+
+```bash
 docker compose up --build
 ```
 
-Compose builds the image, creates the app container and its cache volumes, and starts the Rust API and Vite website together. The Rust/Node/media dependencies are installed in the image, not on your host. Watch the terminal output; when Vite says it is ready, open:
+The first build can take several minutes.
+
+This is expected.
+
+The first build needs to:
+
+1. Download the container base image
+2. Install Linux dependencies
+3. Install Node dependencies
+4. Install Rust dependencies
+5. Compile the Rust backend
+6. Prepare the development environment
+
+Later launches should be significantly faster because dependencies and build artifacts are cached.
+
+---
+
+# 🌐 Opening ANIFLEX
+
+Once the container is running and Vite reports that it is ready, open:
 
 ```text
 http://localhost:1420
 ```
 
-Keep the terminal open while using Orion. Press `Ctrl+C` to stop the foreground app.
+You should now see the ANIFLEX interface.
 
-### 5. Stop, restart, or inspect it
+Keep the terminal running while using the application.
 
-Use the same runtime command prefix you chose above (`podman-compose` or `docker compose`):
+Press:
 
-```sh
-# Stop the app and remove its container/network; keep caches and your project files.
-podman-compose down
+```text
+Ctrl + C
+```
 
-# Start in the background instead of keeping the terminal attached.
+to stop the foreground process.
+
+---
+
+# 🔄 Running in the Background
+
+Instead of keeping the terminal attached:
+
+### Podman
+
+```bash
 podman-compose up -d
+```
 
-# See status and follow logs.
+### Docker
+
+```bash
+docker compose up -d
+```
+
+Check the container:
+
+```bash
 podman-compose ps
+```
+
+Follow its logs:
+
+```bash
 podman-compose logs -f
 ```
 
-For Docker, replace `podman-compose` in those commands with `docker compose`. To rebuild after changing the Dockerfile or needing updated image tools, run `podman-compose up -d --build --force-recreate` (or the Docker equivalent).
+For Docker:
 
-Podman and Docker keep separate images and caches; they do not share downloaded build layers. The source project and downloaded media remain on your computer because the project folder is bind-mounted into the container. `podman-compose down --volumes` (or `docker compose down --volumes`) also deletes the dependency/build cache volumes, so the next build has to recreate them. It does not delete the host project folder or its downloaded media.
-
-### What runs in the container?
-
-There is one service named `orion`, not separate frontend and backend containers:
-
-- Vite serves the website on port `1420`. The Compose file publishes that port on your computer.
-- The Rust API server listens on `127.0.0.1:8787` inside the same container. Vite forwards `/api`, `/video`, and `/subtitles` requests to it; the API port is not published directly.
-- The Compose bind mount maps the `orion-player` folder on your computer into `/app`. Code edits and files downloaded under `/app/src-tauri/media/` are therefore in your project folder and remain after the container stops.
-- `orion_node_modules` and `orion_cargo_target` are named cache volumes for npm and Cargo dependencies/build output. They are not the anime library.
-- The Dockerfile installs `ani-cli`, `yt-dlp`, FFmpeg, and `fzf` in the image. You do not need to separately install those tools on the host for the container workflow.
-
-The `.dockerignore` file keeps local files out of the image build context. It does not prevent the running app from writing to the bind-mounted project folder.
-
-### Which command after a change?
-
-- Changed frontend files? Vite generally reloads them automatically.
-- Changed Rust files? Restart the service so Cargo recompiles and restarts the Rust API.
-- Changed `.env` or `docker-compose.yml`? Recreate the service with `podman-compose up -d --force-recreate` or `docker compose up -d --force-recreate`.
-- Changed the `Dockerfile` or need a newly installed tool? Rebuild with `podman-compose up -d --build --force-recreate` or `docker compose up -d --build --force-recreate`.
-- Want to stop but keep caches? Use the matching `down` command without `--volumes`.
-- Want to clear caches too? Use the matching `down --volumes` command; the next startup will rebuild caches.
-
-## Phone Access
-
-The address `172.18.0.2` printed as Vite's container network address is internal to the container network. Do **not** use it on the phone. The phone needs the laptop's address on the phone-hotspot network and port `1420`.
-
-1. Connect the laptop to the phone's hotspot and connect the phone to that same hotspot.
-2. Find the laptop's IPv4 address on the hotspot interface. On Linux, `ip -brief -4 address` can help identify it; use the address assigned to the Wi-Fi/hotspot connection, not `127.0.0.1` or a `172.x.x.x` Docker address.
-3. Edit `.env` and set `ORION_BIND_ADDRESS` to that exact laptop address, for example:
-
-   ```dotenv
-   ORION_BIND_ADDRESS=192.168.43.25
-   ```
-
-4. Recreate the service so the container runtime applies the host port binding:
-
-   ```sh
-  podman-compose down
-  podman-compose up -d
-   ```
-
-5. On the phone, browse to `http://192.168.43.25:1420`, replacing the example IP with the laptop's actual hotspot IP.
-
-**Phone access status:** This configuration binds the published website port to the selected host IP, but phone-to-container access has not yet been confirmed with rootless Podman or Docker Desktop for Linux. Container networking and the laptop firewall can prevent another device from reaching a published port even when the container is healthy. If the phone cannot connect, this V1.1 setup does not yet have verified phone support; do not change the Rust API bind address as a guess. Check the runtime's networking behavior and allow inbound TCP port `1420` only on the trusted hotspot interface. Do not expose the service to the public internet. A phone hotspot reduces the set of nearby devices only if it is secured; it is not a security guarantee.
-
-The Rust API remains on `127.0.0.1:8787` inside the same container, and Vite proxies API/media requests to it. Do not change that API bind to `0.0.0.0` for this single-container setup.
-
-## How the Recommendation Model Works
-
-When you first open the website, it will appear empty. To begin, go to **Add Anime**, search for anime you want, and download them.
-
-This is the main way to train the recommendation model: the app learns from the anime you add and rate. It is best to download up to 5 anime at a time, ideally 5 different titles. You can download the first episode of each anime or choose a specific episode, but a small set of varied anime works best.
-
-After each download, wait for the page to reload on its own. That reload means the anime has finished downloading and the app is ready for the next one. Download speed depends on your network connection.
-
-To make the recommendation system work properly, you must like the anime you want it to learn from. To do that, click on a video and look at the top-right of the player. There you will see **Like** and **Dislike** buttons. If you like an anime, the model uses it as positive history. If you dislike it, or simply do not give it a like, the model treats it as weak or negative input.
-
-The prediction model works by downloading the next episode of each liked anime, then downloading 5 other recommended anime in addition to that. This means the model keeps building from the anime you liked and continues the story from there. If an anime is not liked, similar anime and their next episodes are less likely to be downloaded.
-
-This is also how the app learns from your taste: if you dislike an anime or do not like it, similar titles and their next episodes will not be downloaded as often. That gives the model a cleaner history to work with.
-
-You can increase how many other anime the model downloads and raise the total anime cap in the source code. These are controlled by constants in the Rust source, so if you want more recommendations or a larger library cap, you can tune those values there.
-
-Another way to give the prediction model history is to use the `ani-cli` history and input anime names in this format:
-
-```text
-{anime name and its episode}[general anime name]
+```bash
+docker compose ps
+docker compose logs -f
 ```
 
-This helps the model build a stronger history using the titles and episode pattern you have already watched and liked.
+---
 
-## Local Development Without Docker
+# 🛠️ Development Workflow
 
-The supported direct development path is Linux. Install Node.js/npm, stable Rust, Bash, curl, FFmpeg, and the Linux build libraries needed by the current Rust/Tauri dependency tree. Then from `orion-player` run:
+ANIFLEX uses two major processes:
 
-```sh
+```text
+Vite
+  │
+  │ Frontend
+  ▼
+React / TypeScript
+  │
+  │ HTTP requests
+  ▼
+Rust HTTP Server
+  │
+  ├── Catalog
+  ├── Video
+  ├── Subtitles
+  ├── Progress
+  └── Downloads
+```
+
+Inside the container these processes run together.
+
+The website is exposed on:
+
+```text
+1420
+```
+
+The Rust API runs internally on:
+
+```text
+127.0.0.1:8787
+```
+
+The Rust API is intentionally not exposed directly to the host in the normal container configuration.
+
+Vite proxies the necessary requests to it.
+
+---
+
+# 🗂️ Local Media
+
+Downloaded media is stored inside:
+
+```text
+orion-player/src-tauri/media/
+```
+
+Because the project directory is bind-mounted into the container, files created there remain on the host computer.
+
+Stopping or removing the container does **not** remove your anime library.
+
+The named container volumes:
+
+```text
+orion_node_modules
+orion_cargo_target
+```
+
+are dependency/build caches.
+
+They are **not** your anime library.
+
+---
+
+# 💾 Your Data
+
+The important distinction is:
+
+```text
+Project files
+     │
+     ├── Source code
+     ├── Configuration
+     └── Local application data
+     
+Media
+     │
+     └── src-tauri/media/
+
+Container caches
+     │
+     ├── node_modules
+     └── Cargo build artifacts
+```
+
+Removing the container does not normally delete the host project or downloaded media.
+
+However:
+
+```bash
+podman-compose down --volumes
+```
+
+or:
+
+```bash
+docker compose down --volumes
+```
+
+removes the dependency/build cache volumes.
+
+The next build will therefore take longer.
+
+---
+
+# 🔧 What Should I Run After Changing Something?
+
+### Changed React / TypeScript / CSS?
+
+Vite normally hot-reloads the changes.
+
+### Changed Rust?
+
+Restart the application/container so Cargo recompiles the backend.
+
+### Changed `.env`?
+
+Recreate the service:
+
+```bash
+podman-compose up -d --force-recreate
+```
+
+### Changed `docker-compose.yml`?
+
+Recreate:
+
+```bash
+podman-compose up -d --force-recreate
+```
+
+### Changed `Dockerfile`?
+
+Rebuild:
+
+```bash
+podman-compose up -d --build --force-recreate
+```
+
+For Docker, replace `podman-compose` with:
+
+```bash
+docker compose
+```
+
+---
+
+# 🧹 Cleaning the Environment
+
+If you want to stop the application while keeping dependency caches:
+
+```bash
+podman-compose down
+```
+
+If you intentionally want to remove the dependency/build cache volumes:
+
+```bash
+podman-compose down --volumes
+```
+
+Be aware that the next startup will need to recreate those caches.
+
+---
+
+# 📱 Phone / Local Network Access
+
+ANIFLEX can potentially be accessed from another device on the same local network.
+
+This functionality is currently considered **experimental**.
+
+The important distinction is:
+
+```text
+127.0.0.1
+```
+
+is your computer itself.
+
+And an address such as:
+
+```text
+172.x.x.x
+```
+
+may be an internal container-network address.
+
+Your phone should instead connect to the **computer's LAN/hotspot IP address**.
+
+For example:
+
+```text
+http://192.168.43.25:1420
+```
+
+The exact address will depend on your network.
+
+---
+
+## ⚠️ Network Security
+
+Do not expose the ANIFLEX development server directly to the public internet.
+
+If enabling LAN access:
+
+* Use a trusted network
+* Keep the host firewall enabled
+* Only allow the required port
+* Do not expose the Rust API unnecessarily
+* Do not treat a phone hotspot as a complete security boundary
+
+Phone access through every Podman/Docker networking configuration is not currently guaranteed.
+
+---
+
+# 🧪 Running Without Docker/Podman
+
+Direct development is currently intended primarily for Linux.
+
+You will need the appropriate development tools, including:
+
+* Node.js
+* npm
+* Rust
+* FFmpeg
+* Bash
+* curl
+* Required Linux build libraries
+
+Then:
+
+```bash
 npm install
+```
+
+and:
+
+```bash
 npm run dev
 ```
 
-The launcher starts the Rust media server and Vite. Open `http://localhost:1420`; press `Ctrl+C` to stop both. For frontend type-check/build:
+The development launcher starts the Rust media server and Vite.
 
-```sh
+Open:
+
+```text
+http://localhost:1420
+```
+
+For a frontend build:
+
+```bash
 npm run build
 ```
 
-Windows and macOS native development are not verified. Docker Desktop or Podman Desktop can run the Linux container environment on those systems.
+Native Windows/macOS development is not the primary tested workflow.
 
-## Media, Downloads, and Local Data
+For those platforms, the container environment is recommended.
 
-- The app's local media directory is `src-tauri/media/`.
-- The Compose bind mount maps the project folder into `/app`, so files the app writes under `/app/src-tauri/media/` are stored in the host's `orion-player/src-tauri/media/` folder and remain after the container stops.
-- `.dockerignore` excludes downloaded video files from the image build context; it does not prevent the running app from writing files into the mounted project directory.
-- `.gitignore` excludes downloaded video formats and generated local state from Git. Do not commit media you do not have rights to distribute.
-- `ani-cli` and download tools are installed in the container image. Their external providers may change, rate-limit, or block requests; container setup cannot guarantee a successful download.
-- The `.env` file is local and ignored by Git. Keep it that way; do not put secrets in the committed `.env.example`.
+---
 
-## Catalog
+# 📚 Catalog
 
-Edit `data/catalog.json` to describe library entries. A minimal example:
+ANIFLEX maintains local library metadata through:
+
+```text
+data/catalog.json
+```
+
+A simplified entry looks like:
 
 ```json
 [
@@ -223,7 +789,10 @@ Edit `data/catalog.json` to describe library entries. A minimal example:
     "title": "Sample Show",
     "year": 2024,
     "format": "TV",
-    "genres": ["Adventure", "Fantasy"],
+    "genres": [
+      "Adventure",
+      "Fantasy"
+    ],
     "synopsis": "A short local-library description.",
     "poster": "/media/sample-show-poster.jpg",
     "video": "/media/sample-show.mp4"
@@ -231,35 +800,514 @@ Edit `data/catalog.json` to describe library entries. A minimal example:
 ]
 ```
 
-Keep catalog media paths consistent with files under `src-tauri/media/`. The app also exposes local API routes through Vite during development, so serving only the static Vite build is not enough for the full experience.
+Media paths must correspond to files that actually exist in the local media directory.
 
-## Troubleshooting
+---
 
-**`podman: command not found`**: Install Podman and a Compose provider from your Linux distribution, then open a new terminal. On Linux, Podman does not require a background daemon or Podman machine.
+# 📥 External Download Dependencies
 
-**`podman-compose: command not found`**: Install the `podman-compose` package from your distribution. For example, on CachyOS/Arch use `sudo pacman -S podman-compose`; on Fedora use `sudo dnf install podman-compose`.
+ANIFLEX's download workflow depends on external software and providers.
 
-**`podman compose` unexpectedly runs Docker Compose**: Use `podman-compose` directly for the commands in this guide. `podman compose` delegates to a provider and may select a Docker Compose plugin installed under `~/.docker`.
+The container includes:
 
-**First startup takes a long time**: A cold Rust build compiles many dependencies. Wait while new `Compiling ...` lines appear. The launcher allows up to 30 minutes and prints periodic progress. Later runs should use the Cargo target volume.
-
-**Download says `Failed to start ani-cli: No such file or directory`**: The running container may have been created from an older image without the executable. From `orion-player`, run `podman-compose up -d --build --force-recreate` (or `docker compose up -d --build --force-recreate`), then check the service logs.
-
-**Download says `No player found. Looked for mpv and vlc`**: This app invokes ani-cli in download mode. The Compose service sets `ANI_CLI_PLAYER=ffmpeg`, and the Docker image installs FFmpeg; both are needed because ani-cli checks for a player before it handles its download option. Confirm the current configuration and binaries with:
-
-```sh
-podman-compose config
-podman-compose exec orion sh -lc 'printf "ANI_CLI_PLAYER=%s\\n" "$ANI_CLI_PLAYER"; command -v ani-cli; command -v ffmpeg; command -v yt-dlp'
+```text
+ani-cli
+yt-dlp
+ffmpeg
+fzf
 ```
 
-The config should show `ANI_CLI_PLAYER: ffmpeg`, and the commands should print paths for `ani-cli`, `ffmpeg`, and `yt-dlp`. If not, rebuild/recreate with `podman-compose up -d --build --force-recreate`. If all tools are present but the download still fails, inspect `podman-compose logs -f`; the external anime provider or ani-cli itself may be failing, which is separate from the container finding the executable.
+You can verify them inside the running container:
 
-**Need to see why startup stopped**: Run `podman-compose ps` first. If the service exited, inspect its logs with `podman-compose logs --tail=100 orion`. For live output while reproducing a problem, use `podman-compose logs -f orion` and press `Ctrl+C` to stop following logs; this does not stop the container. For Docker, replace `podman-compose` with `docker compose`.
+```bash
+podman-compose exec orion sh
+```
 
-**Phone cannot open the page**: Confirm `.env` has the laptop's hotspot-interface IP, recreate the container, use that IP with port `1420`, and check the host firewall. A container's `172.x.x.x` address is not the phone URL. Phone access through rootless Podman and Docker Desktop for Linux remains unverified in this release.
+Then:
 
-**Port 1420 is already in use**: Stop the other service using that port before starting Orion. The Vite config currently expects port `1420`.
+```bash
+command -v ani-cli
+command -v yt-dlp
+command -v ffmpeg
+```
 
-## AI Assistance
+If those commands return executable paths, the tools are available inside the container.
 
-I built this project myself and used AI as a supporting tool for selected parts of the work. Since I am still learning Rust, I especially used it to help explain Rust concepts, explore approaches, and work through some code. The project and its direction are mine, and I continue to review, test, and learn from the code.
+---
+
+# 🐛 Troubleshooting
+
+## `podman: command not found`
+
+Podman is not installed or is not available in your PATH.
+
+Install Podman for your operating system and open a new terminal.
+
+---
+
+## `podman-compose: command not found`
+
+Install the Compose provider.
+
+On Arch/CachyOS:
+
+```bash
+sudo pacman -S podman-compose
+```
+
+Then:
+
+```bash
+podman-compose --version
+```
+
+---
+
+## Windows says Podman is not recognized
+
+Make sure Podman/Podman Desktop is actually installed.
+
+Then verify:
+
+```powershell
+podman --version
+```
+
+If Podman is installed but the command is unavailable, restart the terminal.
+
+If using Podman Desktop, also make sure the Podman machine has been initialized and started.
+
+---
+
+## `podman machine` problems on Windows
+
+Check:
+
+```powershell
+podman machine list
+```
+
+Then start the machine:
+
+```powershell
+podman machine start
+```
+
+If no machine exists:
+
+```powershell
+podman machine init
+```
+
+Then:
+
+```powershell
+podman machine start
+```
+
+---
+
+## `no configuration file provided`
+
+You are probably running Compose from the wrong directory.
+
+Make sure you are inside:
+
+```text
+Aniflex/orion-player
+```
+
+Then run:
+
+```bash
+podman-compose up --build
+```
+
+---
+
+## The first build looks frozen
+
+Rust compilation can take a while, particularly on lower-end hardware.
+
+Look for lines such as:
+
+```text
+Compiling ...
+```
+
+The first build is substantially slower than later launches.
+
+Do not immediately assume that the process has crashed.
+
+---
+
+## Build uses too much RAM
+
+Create `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Then set:
+
+```env
+ORION_CARGO_BUILD_JOBS=1
+```
+
+This reduces parallel Rust compilation and therefore reduces peak memory usage.
+
+The trade-off is a longer build.
+
+---
+
+## `Failed to start ani-cli`
+
+The container may have been built from an older image.
+
+Rebuild it:
+
+```bash
+podman-compose up -d --build --force-recreate
+```
+
+Then inspect:
+
+```bash
+podman-compose logs -f
+```
+
+---
+
+## `No player found. Looked for mpv and vlc`
+
+ANIFLEX's download workflow requires the configured download player.
+
+Check:
+
+```bash
+podman-compose exec orion sh -lc 'printf "ANI_CLI_PLAYER=%s\n" "$ANI_CLI_PLAYER"; command -v ani-cli; command -v ffmpeg; command -v yt-dlp'
+```
+
+The environment should contain:
+
+```text
+ANI_CLI_PLAYER=ffmpeg
+```
+
+and the commands should locate:
+
+```text
+ani-cli
+ffmpeg
+yt-dlp
+```
+
+If they do not:
+
+```bash
+podman-compose up -d --build --force-recreate
+```
+
+---
+
+## ANIFLEX starts and then stops
+
+Check the service:
+
+```bash
+podman-compose ps
+```
+
+Then inspect the logs:
+
+```bash
+podman-compose logs --tail=100 orion
+```
+
+For live logs:
+
+```bash
+podman-compose logs -f orion
+```
+
+---
+
+## Port `1420` is already in use
+
+Another application is already using ANIFLEX's Vite port.
+
+Stop the application using the port before starting ANIFLEX.
+
+The current development configuration expects:
+
+```text
+1420
+```
+
+---
+
+## Phone cannot connect
+
+Check:
+
+1. The phone and computer are on the same network.
+2. You are using the computer's LAN/hotspot IP.
+3. You are using port `1420`.
+4. The container has been recreated after changing the bind address.
+5. The host firewall allows the connection.
+
+Do **not** use the container's `172.x.x.x` address from the phone.
+
+---
+
+# 🧠 Why Rust?
+
+The backend was built with Rust because ANIFLEX is intended to do more than simply display a webpage.
+
+Rust handles the lower-level parts of the application, including:
+
+* Local HTTP serving
+* File handling
+* Media-related operations
+* Download orchestration
+* Application state
+* Recommendation logic
+* Process management
+
+The frontend is responsible for the visual experience, while Rust handles much of the underlying application logic.
+
+This separation also makes ANIFLEX an ongoing learning project for systems programming and Rust development.
+
+---
+
+# 🏗️ Architecture
+
+At a high level:
+
+```text
+┌─────────────────────────────────────────┐
+│                ANIFLEX UI                │
+│                                         │
+│          React + TypeScript             │
+│                 + Vite                  │
+└───────────────────┬─────────────────────┘
+                    │
+                    │ HTTP
+                    ▼
+┌─────────────────────────────────────────┐
+│              Rust Backend               │
+│                                         │
+│           Local HTTP Server              │
+│                                         │
+│  Catalog │ Playback │ Progress │ Media  │
+│                                         │
+│        Download / Prediction            │
+└───────────┬───────────────┬─────────────┘
+            │               │
+            ▼               ▼
+      Local Library     External Tools
+            │          ani-cli / yt-dlp
+            │               │
+            ▼               ▼
+      Video / Subs       Downloads
+```
+
+When running through Compose, these components run together inside one container.
+
+---
+
+# 🔐 Privacy & Local-First Design
+
+ANIFLEX is designed around local storage.
+
+The core library, downloaded media, playback state, and application data are intended to remain on the user's machine.
+
+The application does not require a centralized ANIFLEX account to operate its local library.
+
+However, external services and download providers may still be contacted when you search for metadata or download anime.
+
+Always understand what external services a tool is contacting before using it.
+
+---
+
+# ⚠️ Important Disclaimer
+
+ANIFLEX is a personal software project and development environment.
+
+It does not host or distribute a centralized anime catalog.
+
+Anime availability depends on external tools and providers, which can change independently of ANIFLEX.
+
+Users are responsible for complying with the laws, licenses, copyright rules, and terms of service applicable to the content they access, download, store, or distribute.
+
+Do not commit or distribute copyrighted media through this repository.
+
+---
+
+# 🤖 AI-Assisted Development
+
+ANIFLEX was built as a personal learning project.
+
+AI tools have been used as development assistance for selected tasks, including:
+
+* Explaining programming concepts
+* Exploring implementation approaches
+* Debugging
+* Reviewing code
+* Working through Rust concepts
+
+The project direction, architecture, experimentation, and development remain part of the author's work.
+
+The purpose of using AI here is not simply to generate code and move on, but to use it as a tool for learning and solving difficult engineering problems.
+
+---
+
+# 🛣️ Project Direction
+
+ANIFLEX is still evolving.
+
+The project is being developed around several long-term goals:
+
+* Better local playback
+* More reliable downloading
+* Better recommendation quality
+* Stronger Rust architecture
+* Improved media organization
+* Better cross-platform support
+* Improved local-network support
+* More robust metadata handling
+* More polished UI/UX
+* Less dependence on manual configuration
+
+The architecture is intentionally being developed incrementally rather than attempting to build the entire system at once.
+
+---
+
+# 🧑‍💻 Development Philosophy
+
+ANIFLEX is both an application and a learning project.
+
+The project is being used to explore:
+
+```text
+React
+   ↓
+TypeScript
+   ↓
+HTTP / APIs
+   ↓
+Rust
+   ↓
+Process management
+   ↓
+File systems
+   ↓
+Media servers
+   ↓
+Containers
+   ↓
+Recommendation systems
+```
+
+The goal is not just to make ANIFLEX work.
+
+The goal is to understand **why it works**.
+
+---
+
+# ⭐ Getting Started
+
+The shortest path for a new user is:
+
+### 1. Clone
+
+```bash
+git clone https://github.com/BagellXD/Aniflex.git
+```
+
+### 2. Enter the application
+
+```bash
+cd Aniflex/orion-player
+```
+
+### 3. Install a container runtime
+
+Choose:
+
+* Docker
+* Podman
+
+### 4. Start ANIFLEX
+
+Podman:
+
+```bash
+podman-compose up --build
+```
+
+Docker:
+
+```bash
+docker compose up --build
+```
+
+### 5. Open the application
+
+```text
+http://localhost:1420
+```
+
+### 6. Start building your library
+
+Open **Add Anime**, download some anime, watch them, rate them, and allow the recommendation system to build from your preferences.
+
+---
+
+# 📌 Current Status
+
+**ANIFLEX is an active personal project.**
+
+Some components are mature enough for regular use, while others are still experimental.
+
+In particular:
+
+* Container-based development is supported.
+* Linux development is the primary native development environment.
+* Windows/macOS users can use the container workflow.
+* Local phone access is experimental.
+* External download providers are outside the project's control.
+* The recommendation system is actively evolving.
+
+Expect changes as the project continues to develop.
+
+---
+
+# ❤️ Built for the love of anime
+
+ANIFLEX started as an experiment in building a personal anime experience from the ground up.
+
+It became a way to combine:
+
+**software engineering + Rust + React + media systems + automation + recommendation systems**
+
+into one project.
+
+No massive infrastructure.
+
+No cloud account required for the core library.
+
+Just your machine, your library, and a ridiculous amount of anime.
+
+---
+
+## 🔗 Repository
+
+**ANIFLEX**
+
+https://github.com/BagellXD/Aniflex
+
+---
+
+### Made by BagellXD
