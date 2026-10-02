@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     env,
     fs,
-    io::{self, Read},
+    io::{self, Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::{Mutex, OnceLock},
@@ -1420,6 +1420,145 @@ fn ani_cli_search_title(title: &str) -> String {
         .join(" ")
 }
 
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct HiAnimeResult {
+    pub title: String,
+    pub slug: String,
+    pub query: String,
+    pub rank: usize,
+}
+
+pub fn search_hianime_titles(
+    titles: &[String],
+) -> Result<Vec<HiAnimeResult>, String> {
+    let mut results = Vec::new();
+    let mut seen_slugs = HashSet::new();
+    let mut seen_queries = HashSet::new();
+    let queries = titles
+        .iter()
+        .map(|title| ani_cli_search_title(title))
+        .filter(|title| !title.is_empty() && seen_queries.insert(title.clone()))
+        .collect::<Vec<_>>();
+
+    for query in queries {
+        let encoded_query = query
+            .bytes()
+            .map(|byte| match byte {
+                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                    (byte as char).to_string()
+                }
+                b' ' => "+".to_string(),
+                _ => format!("%{byte:02X}"),
+            })
+            .collect::<String>();
+        let url = format!("https://hianime.at/search?keyword={encoded_query}");
+        let response = ureq::get(&url)
+            .set(
+                "User-Agent",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
+            )
+            .call()
+            .map_err(|error| format!("HiAnime search failed: {error}"))?;
+        let html = response
+            .into_string()
+            .map_err(|error| format!("Could not read HiAnime search response: {error}"))?;
+
+        for result in parse_hianime_results(&html, &query) {
+            if seen_slugs.insert(result.slug.clone()) {
+                results.push(result);
+            }
+        }
+    }
+
+    Ok(results)
+}
+
+fn parse_hianime_results(html: &str, query: &str) -> Vec<HiAnimeResult> {
+    let mut results = Vec::new();
+    let mut offset = 0;
+
+    while let Some(class_offset) = html[offset..].find("class=\"film-name\"") {
+        let class_start = offset + class_offset;
+        let Some(anchor_offset) = html[class_start..].find("<a ") else {
+            break;
+        };
+        let anchor_start = class_start + anchor_offset;
+        let Some(anchor_end_offset) = html[anchor_start..].find('>') else {
+            break;
+        };
+        let anchor = &html[anchor_start..anchor_start + anchor_end_offset + 1];
+        let href = html_attribute(anchor, "href");
+        let title = html_attribute(anchor, "title");
+
+        if let (Some(href), Some(title)) = (href, title) {
+            let slug = href
+                .trim_end_matches('/')
+                .rsplit('/')
+                .next()
+                .unwrap_or_default();
+            let same_site_link = href.starts_with('/')
+                || href.starts_with("https://hianime.at/");
+            if same_site_link
+                && !slug.is_empty()
+                && !slug.contains('?')
+                && !title.is_empty()
+            {
+                results.push(HiAnimeResult {
+                    title: decode_html_entities(&title),
+                    slug: slug.to_string(),
+                    query: query.to_string(),
+                    rank: results.len() + 1,
+                });
+            }
+        }
+
+        offset = anchor_start + anchor_end_offset + 1;
+    }
+
+    results
+}
+
+fn html_attribute(tag: &str, name: &str) -> Option<String> {
+    let marker = format!("{name}=\"");
+    let start = tag.find(&marker)? + marker.len();
+    let end = tag[start..].find('"')? + start;
+    Some(tag[start..end].to_string())
+}
+
+fn decode_html_entities(value: &str) -> String {
+    value
+        .replace("&#039;", "'")
+        .replace("&#39;", "'")
+        .replace("&#x27;", "'")
+        .replace("&apos;", "'")
+        .replace("&quot;", "\"")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+}
+
+#[cfg(test)]
+mod hianime_search_tests {
+    use super::parse_hianime_results;
+
+    #[test]
+    fn parses_ranked_titles_and_slugs() {
+        let html = r#"
+            <div class="film-detail"><h3 class="film-name"><a href="https://hianime.at/re-zero-season-2-123" title="Re:ZERO -Starting Life in Another World- Season 2">Re:ZERO</a></h3></div>
+            <div class="film-detail"><h3 class="film-name"><a href="/re-zero-season-1-456" title="Re:ZERO -Starting Life in Another World-">Re:ZERO</a></h3></div>
+        "#;
+
+        let results = parse_hianime_results(html, "Re ZERO");
+
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].slug, "re-zero-season-2-123");
+        assert_eq!(results[0].rank, 1);
+        assert_eq!(results[1].slug, "re-zero-season-1-456");
+        assert_eq!(results[1].rank, 2);
+        assert_eq!(results[1].title, "Re:ZERO -Starting Life in Another World-");
+    }
+}
+
 // ============================================================
 // SEASON 1 SEARCH
 // ============================================================
@@ -1437,6 +1576,43 @@ fn ani_cli_season_one_search_title(
     format!("{normalized} Season 1")
 }
 
+fn stream_ani_cli_output<R>(
+    mut reader: R,
+    to_stderr: bool,
+) -> thread::JoinHandle<Vec<u8>>
+where
+    R: Read + Send + 'static,
+{
+    thread::spawn(move || {
+        let mut output = Vec::new();
+        let mut buffer = [0; 4096];
+
+        loop {
+            let Ok(count) = reader.read(&mut buffer) else {
+                break;
+            };
+
+            if count == 0 {
+                break;
+            }
+
+            output.extend_from_slice(&buffer[..count]);
+
+            if to_stderr {
+                let mut stream = io::stderr().lock();
+                let _ = stream.write_all(&buffer[..count]);
+                let _ = stream.flush();
+            } else {
+                let mut stream = io::stdout().lock();
+                let _ = stream.write_all(&buffer[..count]);
+                let _ = stream.flush();
+            }
+        }
+
+        output
+    })
+}
+
 // ============================================================
 // DOWNLOAD ONE EPISODE
 // ============================================================
@@ -1446,6 +1622,7 @@ fn download_episode(
     episode: u32,
     season_one: bool,
     history_directory: Option<&Path>,
+    source_selection: Option<(&str, usize, &str)>,
 ) -> bool {
     let directory =
         anime_directory(title);
@@ -1484,8 +1661,9 @@ fn download_episode(
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     );
 
-    let search_title =
-        if season_one {
+    let search_title = if let Some((query, _, _)) = source_selection {
+        query.to_string()
+    } else if season_one {
             ani_cli_season_one_search_title(
                 title,
             )
@@ -1493,58 +1671,118 @@ fn download_episode(
             ani_cli_search_title(title)
         };
 
+    let search_results = if let Some((query, rank, slug)) = source_selection {
+        if rank == 0 || rank > 100 {
+            eprintln!("❌ Invalid HiAnime result rank: {rank}");
+            return false;
+        }
+
+        let matching_result = search_hianime_titles(&[query.to_string()])
+            .map(|results| {
+                results
+                    .iter()
+                    .any(|result| result.rank == rank && result.slug == slug)
+            })
+            .unwrap_or(false);
+
+        if !matching_result {
+            eprintln!("❌ HiAnime search results changed; select the anime again");
+            return false;
+        }
+
+        vec![rank]
+    } else {
+        (1..=10).collect()
+    };
+
     println!(
         "🔎 ani-cli search: {search_title}"
     );
 
-    let mut command =
-        Command::new("ani-cli");
+    let mut downloaded = false;
 
-    command
-        .current_dir(&directory)
-        .env(
-            "ANI_CLI_DOWNLOAD_DIR",
-            &directory,
-        )
-        .stdin(Stdio::null())
-        .args([
-            "--select-nth",
-            "1",
-            "-d",
-            "-e",
-        ])
-        .arg(episode.to_string())
-        .arg(search_title);
+    for search_result in search_results {
+        let mut command = Command::new("ani-cli");
 
-    if let Some(history_directory) =
-        history_directory
-    {
-        command.env(
-            "ANI_CLI_HIST_DIR",
-            history_directory,
-        );
+        command
+            .current_dir(&directory)
+            .env("ANI_CLI_DOWNLOAD_DIR", &directory)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .args(["--select-nth"])
+            .arg(search_result.to_string())
+            .args(["-d", "-e"])
+            .arg(episode.to_string())
+            .arg(&search_title);
+
+        if let Some(history_directory) = history_directory {
+            command.env("ANI_CLI_HIST_DIR", history_directory);
+        }
+
+        let mut child = match command.spawn() {
+            Ok(child) => child,
+            Err(error) => {
+                eprintln!("❌ Failed to start ani-cli: {error}");
+                return false;
+            }
+        };
+
+        let Some(stdout) = child.stdout.take() else {
+            eprintln!("❌ Failed to capture ani-cli output");
+            let _ = child.kill();
+            let _ = child.wait();
+            return false;
+        };
+        let Some(stderr) = child.stderr.take() else {
+            eprintln!("❌ Failed to capture ani-cli errors");
+            let _ = child.kill();
+            let _ = child.wait();
+            return false;
+        };
+
+        let stdout_reader = stream_ani_cli_output(stdout, false);
+        let stderr_reader = stream_ani_cli_output(stderr, true);
+
+        let status = match child.wait() {
+            Ok(status) => status,
+            Err(error) => {
+                eprintln!("❌ Failed waiting for ani-cli: {error}");
+                return false;
+            }
+        };
+
+        let stdout = stdout_reader.join().unwrap_or_default();
+        let stderr = stderr_reader.join().unwrap_or_default();
+
+        if status.success() {
+            downloaded = true;
+            break;
+        }
+
+        let output = [stdout.as_slice(), stderr.as_slice()].concat();
+        let output = String::from_utf8_lossy(&output);
+
+        if output.contains("Invalid episode!") {
+            if source_selection.is_none() && search_result < 10 {
+                println!(
+                    "ani-cli result {search_result} does not list episode {episode}; trying the next match..."
+                );
+                continue;
+            }
+
+            eprintln!(
+                "❌ None of the first 10 ani-cli matches list episode {episode} for {search_title}"
+            );
+        } else {
+            eprintln!("❌ ani-cli exited with {status}");
+        }
+
+        return false;
     }
 
-    let status = command.status();
-
-    match status {
-        Ok(status) if status.success() => {}
-
-        Ok(status) => {
-            eprintln!(
-                "❌ ani-cli exited with {status}"
-            );
-
-            return false;
-        }
-
-        Err(error) => {
-            eprintln!(
-                "❌ Failed to start ani-cli: {error}"
-            );
-
-            return false;
-        }
+    if !downloaded {
+        return false;
     }
 
     // --------------------------------------------------------
@@ -1684,6 +1922,7 @@ fn download_new_anime(
         1,
         true,
         None,
+        None,
     ) {
         eprintln!(
             "❌ Failed to download Season 1 Episode 1 for {title}"
@@ -1819,6 +2058,7 @@ fn continue_priority_anime(
         title,
         next_episode,
         false,
+        None,
         None,
     )
 }
@@ -2027,6 +2267,9 @@ pub fn download_manual_episode(
     episode: u32,
     total_episodes: Option<u32>,
     poster_url: Option<&str>,
+    source_query: Option<&str>,
+    source_rank: Option<usize>,
+    source_slug: Option<&str>,
 ) -> bool {
     if title.trim().is_empty()
         || episode == 0
@@ -2050,11 +2293,21 @@ pub fn download_manual_episode(
         return false;
     }
 
+    let source_selection = match (source_query, source_rank, source_slug) {
+        (Some(query), Some(rank), Some(slug)) => Some((query, rank, slug)),
+        (None, None, None) => None,
+        _ => {
+            eprintln!("❌ Incomplete HiAnime source selection");
+            return false;
+        }
+    };
+
     if !download_episode(
         title.trim(),
         episode,
         false,
         Some(&history_directory),
+        source_selection,
     ) {
         return false;
     }

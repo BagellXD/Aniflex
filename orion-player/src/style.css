@@ -512,6 +512,16 @@ body {
 .ar-result-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .ar-result-copy small { color: var(--dim); font-size: 11px; }
 .ar-result > svg { flex: none; color: var(--green); }
+.ar-find-source { min-height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 11px !important; border: 1px solid rgba(255,255,255,.25) !important; background: #202020 !important; color: #fff; font-size: 12px; }
+.ar-find-source:hover:not(:disabled) { border-color: #fff !important; background: #303030 !important; }
+.ar-find-source:disabled { opacity: .6; }
+.ar-source-results { display: grid; margin-top: 10px; border-top: 1px solid rgba(255,255,255,.12); }
+.ar-source-result { min-width: 0; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px !important; border-bottom: 1px solid rgba(255,255,255,.12) !important; text-align: left; }
+.ar-source-result:hover, .ar-source-result.active { background: rgba(255,255,255,.08) !important; }
+.ar-source-result > span { display: grid; gap: 4px; min-width: 0; }
+.ar-source-result strong { overflow-wrap: anywhere; font-size: 13px; font-weight: 650; }
+.ar-source-result small { color: var(--dim); font-size: 11px; overflow-wrap: anywhere; }
+.ar-source-result > svg { flex: none; color: var(--green); }
 .ar-selection { min-width: 0; padding: 24px 0 24px 26px; }
 .ar-placeholder { min-height: 300px; display: grid; align-content: center; justify-items: center; text-align: center; color: var(--dim); }
 .ar-placeholder h2 { margin: 12px 0 3px; color: #fff; font-size: 20px; }

@@ -11,13 +11,43 @@ type AniListAnime = {
   coverImage?: { extraLarge?: string | null; large?: string | null };
 };
 
+type HiAnimeMatch = {
+  title: string;
+  slug: string;
+  query: string;
+  rank: number;
+};
+
 const displayTitle = (anime: AniListAnime) => anime.title.english || anime.title.romaji || anime.title.native || "Untitled anime";
+
+const normalizeMatchTitle = (title: string) => title
+  .toLocaleLowerCase()
+  .replace(/[^\p{L}\p{N}]+/gu, " ")
+  .trim()
+  .replace(/\s+/g, " ");
+
+const isRelevantHiAnimeMatch = (match: HiAnimeMatch, titles: string[]) => {
+  const candidate = normalizeMatchTitle(match.title);
+  return titles.some((title) => {
+    const normalized = normalizeMatchTitle(title);
+    return candidate === normalized
+      || candidate.startsWith(`${normalized} season `)
+      || candidate.startsWith(`${normalized} part `)
+      || candidate.startsWith(`${normalized} ova`)
+      || candidate.startsWith(`${normalized} movie`)
+      || normalized.startsWith(`${candidate} `);
+  });
+};
 
 export default function AnimeRequest() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AniListAnime[]>([]);
   const [selected, setSelected] = useState<AniListAnime | null>(null);
+  const [sourceResults, setSourceResults] = useState<HiAnimeMatch[]>([]);
+  const [selectedSource, setSelectedSource] = useState<HiAnimeMatch | null>(null);
+  const [sourceSearchDone, setSourceSearchDone] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [sourceSearching, setSourceSearching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -62,8 +92,38 @@ export default function AnimeRequest() {
 
   const chooseAnime = (anime: AniListAnime) => {
     setSelected(anime);
+    setSourceResults([]);
+    setSelectedSource(null);
+    setSourceSearchDone(false);
     setMessage("");
     setError("");
+  };
+
+  const findHiAnimeMatches = async () => {
+    if (!selected || sourceSearching) return;
+    setSourceSearching(true);
+    setSourceResults([]);
+    setSelectedSource(null);
+    setSourceSearchDone(false);
+    setError("");
+    try {
+      const response = await fetch("/api/anime/source-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titles: [selected.title.english, selected.title.romaji, selected.title.native, displayTitle(selected)]
+            .filter((title): title is string => Boolean(title)),
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text() || "HiAnime search failed");
+      const data: unknown = await response.json();
+      setSourceResults(Array.isArray(data) ? data as HiAnimeMatch[] : []);
+      setSourceSearchDone(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "HiAnime search failed");
+    } finally {
+      setSourceSearching(false);
+    }
   };
 
   const startDownload = async (episode: number) => {
@@ -80,6 +140,9 @@ export default function AnimeRequest() {
           episode,
           total_episodes: selected.episodes ?? null,
           poster_url: selected.coverImage?.extraLarge || selected.coverImage?.large || null,
+          source_query: selectedSource?.query,
+          source_rank: selectedSource?.rank,
+          source_slug: selectedSource?.slug,
         }),
       });
       if (!response.ok) throw new Error(await response.text() || "Could not start download");
@@ -90,6 +153,21 @@ export default function AnimeRequest() {
       setBusy(false);
     }
   };
+
+  const selectedTitles = selected
+    ? [selected.title.english, selected.title.romaji, selected.title.native, displayTitle(selected)]
+      .filter((title): title is string => Boolean(title))
+    : [];
+  const normalizedSelectedTitles = selectedTitles.map(normalizeMatchTitle);
+  const relevantSourceResults = selected
+    ? sourceResults
+      .filter((match) => isRelevantHiAnimeMatch(match, selectedTitles))
+      .sort((left, right) => {
+        const leftExact = normalizedSelectedTitles.includes(normalizeMatchTitle(left.title));
+        const rightExact = normalizedSelectedTitles.includes(normalizeMatchTitle(right.title));
+        return Number(rightExact) - Number(leftExact);
+      })
+    : [];
 
   return (
     <section className="ar-page" aria-labelledby="ar-title">
@@ -109,6 +187,9 @@ export default function AnimeRequest() {
               onChange={(event) => {
                 setQuery(event.target.value);
                 setSelected(null);
+                setSourceResults([]);
+                setSelectedSource(null);
+                setSourceSearchDone(false);
                 setMessage("");
               }}
               placeholder="Search anime titles"
@@ -158,18 +239,44 @@ export default function AnimeRequest() {
                 </div>
               </div>
               {selected.description && <p className="ar-description">{selected.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}</p>}
-              <h3>Choose an episode</h3>
-              {selected.episodes && selected.episodes > 0 ? (
-                <div className="ar-episodes">
-                  {Array.from({ length: selected.episodes }, (_, index) => index + 1).map((episode) => (
-                    <button key={episode} disabled={busy} onClick={() => void startDownload(episode)} type="button" title={`Download episode ${episode}`}>
-                      {busy ? <LoaderCircle className="ar-spinner" size={15} /> : <Download size={15} />}
-                      Episode {episode}
+              <h3>Match it on HiAnime</h3>
+              <button className="ar-find-source" type="button" onClick={() => void findHiAnimeMatches()} disabled={sourceSearching || busy}>
+                {sourceSearching ? <LoaderCircle className="ar-spinner" size={16} /> : <Search size={16} />}
+                {sourceSearching ? "Searching HiAnime" : "Find HiAnime matches"}
+              </button>
+              {relevantSourceResults.length > 0 && (
+                <div className="ar-source-results" aria-label="HiAnime matches">
+                  {relevantSourceResults.map((match) => (
+                    <button
+                      className={`ar-source-result${selectedSource?.slug === match.slug ? " active" : ""}`}
+                      key={match.slug}
+                      onClick={() => setSelectedSource(match)}
+                      type="button"
+                      aria-pressed={selectedSource?.slug === match.slug}
+                    >
+                      <span><strong>{match.title}</strong><small>Matched using “{match.query}”</small></span>
+                      {selectedSource?.slug === match.slug && <Check size={17} aria-label="Selected" />}
                     </button>
                   ))}
                 </div>
-              ) : (
-                <p className="ar-feedback">AniList does not list an episode count for this title, so episode selection is unavailable.</p>
+              )}
+              {sourceSearchDone && relevantSourceResults.length === 0 && <p className="ar-feedback">No matching HiAnime titles found for this AniList entry.</p>}
+              {selectedSource && (
+                <>
+                  <h3>Choose an episode</h3>
+                  {selected.episodes && selected.episodes > 0 ? (
+                    <div className="ar-episodes">
+                      {Array.from({ length: selected.episodes }, (_, index) => index + 1).map((episode) => (
+                        <button key={episode} disabled={busy} onClick={() => void startDownload(episode)} type="button" title={`Download episode ${episode}`}>
+                          {busy ? <LoaderCircle className="ar-spinner" size={15} /> : <Download size={15} />}
+                          Episode {episode}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="ar-feedback">AniList does not list an episode count for this title, so episode selection is unavailable.</p>
+                  )}
+                </>
               )}
               {message && <p className="ar-feedback success" role="status"><Check size={16} />{message}</p>}
               {error && <p className="ar-feedback error" role="alert">{error}</p>}
