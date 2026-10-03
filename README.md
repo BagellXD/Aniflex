@@ -1,4 +1,4 @@
-# 🎬 ANIFLEX
+# ANIFLEX
 
 ### Your anime library. Your machine. Your rules.
 
@@ -14,7 +14,7 @@ The project can run directly on Linux or inside a container using **Podman or Do
 
 ---
 
-## ✨ What is ANIFLEX?
+## What is ANIFLEX?
 
 ANIFLEX is a personal, offline-first anime library application.
 
@@ -22,24 +22,24 @@ Instead of relying on a remote database and streaming server for every viewing s
 
 The application consists of:
 
-* 🎨 A React/TypeScript frontend
-* ⚡ Vite development tooling
-* 🦀 A Rust backend and local HTTP media server
-* 🎞️ Local video playback
-* 📝 Subtitle support
-* 💾 Local watch progress
-* ❤️ Anime ratings and preferences
-* 🧠 A recommendation/prediction system
-* 📥 Automated anime downloading
-* 🔎 Anime discovery and metadata
-* 🐳 Docker/Podman container support
-* 📱 Experimental local-network/phone access
+* A React/TypeScript frontend
+* Vite development tooling
+* A Rust backend and local HTTP media server
+* Local video playback
+* Subtitle support
+* Local watch progress
+* Anime ratings and preferences
+* A recommendation/prediction system
+* Automated anime downloading
+* Anime discovery and metadata
+* Docker/Podman container support
+* Experimental local-network/phone access
 
 The result is a self-hosted anime experience that can continue working even when you are no longer connected to the internet, provided the anime has already been downloaded.
 
 ---
 
-# 🖼️ Project Overview
+# Project Overview
 
 ```text
                     ANIFLEX
@@ -70,9 +70,9 @@ The Rust server handles the parts of the application that should not be handled 
 
 ---
 
-# 🚀 Features
+# Features
 
-## 🎞️ Local Anime Library
+## Local Anime Library
 
 ANIFLEX stores your downloaded anime locally.
 
@@ -82,7 +82,7 @@ Your local files remain on your machine.
 
 ---
 
-## ▶️ Local Video Playback
+## Local Video Playback
 
 Watch downloaded episodes directly through the ANIFLEX interface.
 
@@ -118,12 +118,12 @@ This allows the local library to feel more like a proper streaming-service inter
 
 ---
 
-## ❤️ Personal Ratings
+## Personal Ratings
 
 ANIFLEX allows you to express your preferences through:
 
-* ❤️ Like
-* 👎 Dislike
+* Like
+* Dislike
 * Unrated
 
 These preferences are used as part of the recommendation system.
@@ -132,7 +132,7 @@ Your library therefore isn't just a collection of downloaded files , it can beco
 
 ---
 
-# 🧠 Recommendation System
+# Recommendation System
 
 One of the more experimental parts of ANIFLEX is its recommendation/prediction system.
 
@@ -185,7 +185,7 @@ The model can use those preferences as part of its history when deciding what sh
 
 ---
 
-## 📥 Automated Downloads
+## Automated Downloads
 
 ANIFLEX uses external command-line tools for its download workflow.
 
@@ -204,7 +204,7 @@ That means you do not need to separately install every media tool on your comput
 
 ---
 
-# 🧩 Technology Stack
+# Technology Stack
 
 | Component          | Technology       |
 | ------------------ | ---------------- |
@@ -221,7 +221,7 @@ That means you do not need to separately install every media tool on your comput
 
 ---
 
-# 📁 Project Structure
+# Project Structure
 
 The repository contains the main ANIFLEX application inside `orion-player`.
 
@@ -265,7 +265,7 @@ The exact structure can change as ANIFLEX develops.
 
 ---
 
-# 🐳 Running ANIFLEX with a Container
+# Running ANIFLEX with a Container
 
 The easiest way to avoid installing the entire development stack manually is to use the included container environment.
 
@@ -280,7 +280,7 @@ The container provides the project's Linux environment, including Rust, Node.js,
 
 ---
 
-# 🪟 Windows Users
+# Windows Users
 
 Windows users **do not need to install Rust, Node.js, FFmpeg, ani-cli, or the other ANIFLEX development dependencies directly** when using the container workflow.
 
@@ -328,7 +328,7 @@ podman machine start
 
 ---
 
-# 🐧 Linux Users
+# Linux Users
 
 Linux users can run Podman natively without a virtual machine.
 
@@ -357,7 +357,7 @@ Docker Engine and Docker Compose can also be used on Linux.
 
 ---
 
-# 🍎 macOS
+# macOS
 
 macOS users can use:
 
@@ -368,7 +368,7 @@ Both run Linux containers through a virtualized Linux environment.
 
 ---
 
-# 📥 Getting ANIFLEX
+# Getting ANIFLEX
 
 Clone the repository:
 
@@ -388,7 +388,7 @@ Running the Compose command from the repository's parent directory will not work
 
 ---
 
-# ⚙️ Optional Configuration
+# Optional Configuration
 
 ANIFLEX does not require an `.env` file for a normal local installation.
 
@@ -416,7 +416,7 @@ The default configuration uses two Rust compilation jobs to reduce peak memory u
 
 ---
 
-# ▶️ Starting ANIFLEX
+# Starting ANIFLEX
 
 ## Podman
 
@@ -449,7 +449,7 @@ Later launches should be significantly faster because dependencies and build art
 
 ---
 
-# 🌐 Opening ANIFLEX
+# Opening ANIFLEX
 
 Once the container is running and Vite reports that it is ready, open:
 
@@ -471,7 +471,7 @@ to stop the foreground process.
 
 ---
 
-# 🔄 Running in the Background
+# Running in the Background
 
 Instead of keeping the terminal attached:
 
@@ -508,7 +508,7 @@ docker compose logs -f
 
 ---
 
-# 🔄 Updating ANIFLEX
+# Updating ANIFLEX
 
 When a new ANIFLEX update is published, update the source first, then recreate the container from the `orion-player` directory.
 
@@ -559,7 +559,7 @@ Use `--build` when the `Dockerfile`, installed tools, or image dependencies chan
 
 ---
 
-# 🛠️ Development Workflow
+# Development Workflow
 
 ANIFLEX uses two major processes:
 
@@ -601,7 +601,7 @@ Vite proxies the necessary requests to it.
 
 ---
 
-# 🗂️ Local Media
+# Local Media
 
 Downloaded media is stored inside:
 
@@ -626,7 +626,7 @@ They are **not** your anime library.
 
 ---
 
-# 💾 Your Data
+# Your Data
 
 The important distinction is:
 
@@ -667,7 +667,7 @@ The next build will therefore take longer.
 
 ---
 
-# 🔧 What Should I Run After Changing Something?
+# What Should I Run After Changing Something?
 
 ### Changed React / TypeScript / CSS?
 
@@ -709,7 +709,7 @@ docker compose
 
 ---
 
-# 🧹 Cleaning the Environment
+# Cleaning the Environment
 
 If you want to stop the application while keeping dependency caches:
 
@@ -727,7 +727,7 @@ Be aware that the next startup will need to recreate those caches.
 
 ---
 
-# 📱 Phone / Local Network Access
+# Phone / Local Network Access
 
 ANIFLEX can potentially be accessed from another device on the same local network.
 
@@ -761,7 +761,7 @@ The exact address will depend on your network.
 
 ---
 
-## ⚠️ Network Security
+## Network Security
 
 Do not expose the ANIFLEX development server directly to the public internet.
 
@@ -777,7 +777,7 @@ Phone access through every Podman/Docker networking configuration is not current
 
 ---
 
-# 🧪 Running Without Docker/Podman
+# Running Without Docker/Podman
 
 Direct development is currently intended primarily for Linux.
 
@@ -823,7 +823,7 @@ For those platforms, the container environment is recommended.
 
 ---
 
-# 📚 Catalog
+# Catalog
 
 ANIFLEX maintains local library metadata through:
 
@@ -855,7 +855,7 @@ Media paths must correspond to files that actually exist in the local media dire
 
 ---
 
-# 📥 External Download Dependencies
+# External Download Dependencies
 
 ANIFLEX's download workflow depends on external software and providers.
 
@@ -886,7 +886,7 @@ If those commands return executable paths, the tools are available inside the co
 
 ---
 
-# 🐛 Troubleshooting
+# Troubleshooting
 
 ## `podman: command not found`
 
@@ -1112,7 +1112,7 @@ Do **not** use the container's `172.x.x.x` address from the phone.
 
 ---
 
-# 🧠 Why Rust?
+# Why Rust?
 
 The backend was built with Rust because ANIFLEX is intended to do more than simply display a webpage.
 
@@ -1132,7 +1132,7 @@ This separation also makes ANIFLEX an ongoing learning project for systems progr
 
 ---
 
-# 🏗️ Architecture
+# Architecture
 
 At a high level:
 
@@ -1168,7 +1168,7 @@ When running through Compose, these components run together inside one container
 
 ---
 
-# 🔐 Privacy & Local-First Design
+# Privacy & Local-First Design
 
 ANIFLEX is designed around local storage.
 
@@ -1182,7 +1182,7 @@ Always understand what external services a tool is contacting before using it.
 
 ---
 
-# ⚠️ Important Disclaimer
+# Important Disclaimer
 
 ANIFLEX is a personal software project and development environment.
 
@@ -1214,7 +1214,7 @@ The purpose of using AI here is not simply to generate code and move on, but to 
 
 ---
 
-# 🛣️ Project Direction
+# Project Direction
 
 ANIFLEX is still evolving.
 
@@ -1235,7 +1235,7 @@ The architecture is intentionally being developed incrementally rather than atte
 
 ---
 
-# 🧑‍💻 Development Philosophy
+# Development Philosophy
 
 ANIFLEX is both an application and a learning project.
 
@@ -1267,7 +1267,7 @@ The goal is to understand **why it works**.
 
 ---
 
-# ⭐ Getting Started
+# Getting Started
 
 The shortest path for a new user is:
 
@@ -1316,7 +1316,7 @@ Open **Add Anime**, download some anime, watch them, rate them, and allow the re
 
 ---
 
-# 📌 Current Status
+# Current Status
 
 **ANIFLEX is an active personal project.**
 
@@ -1335,7 +1335,7 @@ Expect changes as the project continues to develop.
 
 ---
 
-# ❤️ Built for the love of anime
+# Built for the love of anime
 
 ANIFLEX started as an experiment in building a personal anime experience from the ground up.
 
@@ -1353,7 +1353,7 @@ Just your machine, your library, and a ridiculous amount of anime.
 
 ---
 
-## 🔗 Repository
+## Repository
 
 **ANIFLEX**
 
