@@ -223,7 +223,7 @@ That means you do not need to separately install every media tool on your comput
 
 # Project Structure
 
-The repository contains the main ANIFLEX application inside `orion-player`.
+The repository contains the main ANIFLEX application inside `/orion-player`.
 
 A simplified view:
 
